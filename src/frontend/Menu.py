@@ -79,6 +79,13 @@ class Menu(arcade.View):
         self.tex_right = arcade.load_texture(f"{path}/arrow_right.png")
         self.tex_right_hover = arcade.load_texture(f"{path}/arrow_right_hover.png")
         self.tex_lvl = arcade.load_texture(f"{path}/lvl.png")
+        
+        # --- FONT ASSETS ---
+        arcade.load_font("src/public/assets/Orbitron-Bold.ttf")
+        
+        # --- SOUND ASSETS ---
+        self.music = arcade.load_sound("src/public/assets/Chrome Halo.mp3")
+        self.music_player = self.music.play(loop=True, volume=0.5)
 
     def _setup_ui(self):
         """ Construct the UI layout components """
@@ -112,7 +119,7 @@ class Menu(arcade.View):
 
         self.level_label = arcade.gui.UILabel(
             text=self.levels[self.current_level_index][0],
-            font_size=16, font_name="Arial", text_color=arcade.color.WHITE
+            font_size=20, font_name="Orbitron", text_color=arcade.color.WHITE
         )
 
         # Re-creating arrows to be children of the anchor layout
