@@ -1,7 +1,8 @@
 import arcade
 import arcade.gui
-import math
 import random
+import json
+from pathlib import Path
 
 class Menu(arcade.View):
     """
@@ -14,34 +15,45 @@ class Menu(arcade.View):
     def __init__(self):
         super().__init__()
         
-        # 1. Constants and State
+        # 1. Constants
         self._init_constants()
         self.pulse_timer = 0.0
         self.next_glitch_time = random.uniform(2, 5)
         self.glitch_end_time = 0.0
         
-        # 2. Shader Setup (Background effect)
+        # 2. Shader
         self._setup_shader()
         
-        # 3. Asset Management (Textures, Fonts, Sounds)
+        # 3. Asset Management 
         self._load_assets()
         
-        # 4. User Interface Navigation
+        # 4. User Interface
         self.manager = arcade.gui.UIManager()
         self.manager.enable()
         self._setup_ui()
 
     def _init_constants(self):
-        """ Difficulty definitions and UI styles """
+        """ Difficulty definitions and score load """
         self.levels = [("FACILE", 1), ("MOYEN", 2), ("DIFFICILE", 3)]
         self.current_level_index = 1
         
-        # Button Styles (used for the level text display part if needed)
-        self.level_style = {
-            "normal": {"bg": (60, 60, 60), "font_color": arcade.color.WHITE},
-            "hover": {"bg": (60, 60, 60), "font_color": arcade.color.WHITE},
-            "press": {"bg": (60, 60, 60), "font_color": arcade.color.WHITE},
-        }
+        # Load scores from JSON
+        self.score_data = {}
+        self._load_scores()
+
+    def _load_scores(self):
+        """ Read the high scores from the external JSON file """
+        path = Path("src/backend/score.json")
+        try:
+            if path.exists():
+                with open(path, "r") as f:
+                    self.score_data = json.load(f)
+            else:
+                # Default values if file missing
+                self.score_data = {"0": "00:00", "1": "00:00", "2": "00:00"}
+        except Exception as e:
+            print(f"Erreur lors du chargement des scores : {e}")
+            self.score_data = {"0": "00:00", "1": "00:00", "2": "00:00"}
 
     def _setup_shader(self):
         """ Initialize the CRT-style mouse glow shader """
@@ -89,6 +101,7 @@ class Menu(arcade.View):
         self.tex_right = arcade.load_texture(f"{path}/arrow_right.png")
         self.tex_right_hover = arcade.load_texture(f"{path}/arrow_right_hover.png")
         self.tex_lvl = arcade.load_texture(f"{path}/lvl.png")
+        self.tex_score = arcade.load_texture(f"{path}/score.png")
         
         # Font Assets
         arcade.load_font("src/public/assets/Orbitron-Bold.ttf")
@@ -101,91 +114,149 @@ class Menu(arcade.View):
         """ Build the responsive layout with UIManager """
         self.anchor = arcade.gui.UIAnchorLayout()
         self.v_box = arcade.gui.UIBoxLayout(space_between=20)
-        
+
+
+
+
+
+
+
         # --- PLAY BUTTON ---
         self.play_button = arcade.gui.UITextureButton(
             texture=self.tex_play,
             texture_hovered=self.tex_play_hover,
             texture_pressed=self.tex_play_hover,
-            width=250, height=80
-        )
+            width=250, height=80)
         def on_click_play(event):
             level_name, level_id = self.levels[self.current_level_index]
             print(f"Lancement du jeu - Niveau : {level_id} ({level_name})")
         self.play_button.on_click = on_click_play
-
+        self.play_button.original_hover_tex = self.play_button.texture_hovered
         self.v_box.add(self.play_button)
 
+
+
+
+
+
+
         # --- DIFFICULTY SELECTOR ---
-        # Container for frame + text + arrows
         self.level_button = arcade.gui.UITextureButton(
             texture=self.tex_lvl,
-            width=350, height=100
-        )
+            width=350, height=100)
         def on_click_level(event):
             self.current_level_index = (self.current_level_index + 1) % len(self.levels)
             self.update_level_label()
         self.level_button.on_click = on_click_level
-
+        self.level_button.original_hover_tex = self.level_button.texture_hovered
         self.level_label = arcade.gui.UILabel(
             text=self.levels[self.current_level_index][0],
-            font_size=20, font_name="Orbitron", text_color=arcade.color.WHITE
-        )
+            font_size=20, font_name="Orbitron", text_color=arcade.color.WHITE)
+
+
 
         self.left_button = arcade.gui.UITextureButton(
             texture=self.tex_left,
             texture_hovered=self.tex_left_hover,
             texture_pressed=self.tex_left_hover,
-            width=30, height=30
-        )
+            width=30, height=30)
         def on_click_left(event):
             self.current_level_index = (self.current_level_index - 1) % len(self.levels)
             self.update_level_label()
         self.left_button.on_click = on_click_left
+        self.left_button.original_hover_tex = self.left_button.texture_hovered
+
+
 
         self.right_button = arcade.gui.UITextureButton(
             texture=self.tex_right,
             texture_hovered=self.tex_right_hover,
             texture_pressed=self.tex_right_hover,
-            width=30, height=30
-        )
+            width=30, height=30)
         def on_click_right(event):
             self.current_level_index = (self.current_level_index + 1) % len(self.levels)
             self.update_level_label()
         self.right_button.on_click = on_click_right
+        self.right_button.original_hover_tex = self.right_button.texture_hovered
 
-        # Grouping everything in an AnchorLayout for precise alignment
+
+        # Anchor difficulty
         level_container = arcade.gui.UIAnchorLayout(
             width=250, height=100, 
-            size_hint=(None, None)
-        )
+            size_hint=(None, None))
         level_container.add(self.level_button, anchor_x="center_x", anchor_y="center_y")
         level_container.add(self.level_label, anchor_x="center_x", anchor_y="center_y")
         level_container.add(self.left_button, anchor_x="left", anchor_y="center_y")
         level_container.add(self.right_button, anchor_x="right", anchor_y="center_y")
-
         self.v_box.add(level_container)
+
+
+
+
+
+
 
         # --- QUIT BUTTON ---
         self.quit_button = arcade.gui.UITextureButton(
             texture=self.tex_quit,
             texture_hovered=self.tex_quit_hover,
             texture_pressed=self.tex_quit_hover,
-            width=250, height=80
-        )
+            width=250, height=80)
         def on_click_quit(event):
             arcade.exit()
         self.quit_button.on_click = on_click_quit
-
+        self.quit_button.original_hover_tex = self.quit_button.texture_hovered
         self.v_box.add(self.quit_button)
-        
-        # Center all UI, slightly lowered for visual balance
+
+
+
+
+        # SCORE PANEL 
+        self.score_container = arcade.gui.UIAnchorLayout(width=420, height=220, size_hint=(None, None))
+        self.score_button = arcade.gui.UITextureButton(
+            texture=self.tex_score,
+            width=420, height=220)
+        self.score_button.alpha = 180
+        self.score_button.original_hover_tex = self.score_button.texture_hovered
+        self.score_container.add(self.score_button, anchor_x="center_x", anchor_y="center_y")
+        self.score_vbox = arcade.gui.UIBoxLayout(space_between=5) 
+
+
+
+        # Header
+        self.score_vbox.add(arcade.gui.UILabel(
+            text="MEILLEUR SCORE", 
+            font_size=16, font_name="Orbitron", 
+            text_color=(255, 255, 0, 230)))
+
+
+        self.score_entries = []
+        for i in range(1, 2): 
+            lbl = arcade.gui.UILabel(
+                text="", 
+                font_size=16, font_name="Orbitron", 
+                text_color=(255, 255, 255, 230))
+            self.score_vbox.add(lbl)
+            self.score_entries.append(lbl)
+
+
+        # Anchor score
+        self.score_container.add(self.score_vbox, anchor_x="center_x", anchor_y="center_y", align_y=10)
+        self.update_scores()
         self.anchor.add(child=self.v_box, anchor_x="center_x", anchor_y="center_y", align_y=-50)
+        self.anchor.add(child=self.score_container, anchor_x="right", anchor_y="bottom", align_x=25, align_y=-50)
         self.manager.add(self.anchor)
 
     def update_level_label(self):
-        """ Update text on the current level display """
+        """ Update text on the current level and scoreboard """
         self.level_label.text = self.levels[self.current_level_index][0]
+        self.update_scores()
+
+    def update_scores(self):
+        """ Refresh the scoreboard based on the current level from score.json """
+        time = self.score_data.get(str(self.current_level_index), "00:00")
+        if len(self.score_entries) > 0:
+            self.score_entries[0].text = f"{time}"
 
     def on_show_view(self):
         arcade.set_background_color(arcade.color.BLACK)
@@ -200,47 +271,53 @@ class Menu(arcade.View):
     def on_draw(self):
         """ Main rendering pipeline """
         self.clear()
-        
-        # 1. Update & Bind Shader Uniforms
+
         self.tex_bg.use(0)
         self.shader["u_texture"] = 0
-        
+
         framebuffer_size = self.window.get_framebuffer_size()
         ratio = framebuffer_size[0] / self.window.width
         
         self.shader["u_mouse"] = (self.u_mouse[0] * ratio, self.u_mouse[1] * ratio)
         self.shader["u_resolution"] = framebuffer_size
-        
-        # 2. Render Animated Background
+
         self.quad.render(self.shader)
-        
-        # 3. Faulty Neon/Glitch Animation Logic
         if self.pulse_timer > self.next_glitch_time:
-            # Trigger a short flicker burst
             self.glitch_end_time = self.pulse_timer + random.uniform(0.3, 0.6)
             self.next_glitch_time = self.glitch_end_time + random.uniform(2, 8)
-            
         is_glitching = self.pulse_timer < self.glitch_end_time
-        
         # Apply flicker to hovered buttons
         all_buttons = [
             self.play_button, self.quit_button, 
-            self.level_button, self.left_button, self.right_button
+            self.level_button, self.left_button, self.right_button,
+            self.score_button
         ]
-        
+
         for btn in all_buttons:
+            # Enforce visibility
+            btn.visible = True
+            
+            # Flicker logic using texture swap
             if btn.hovered and is_glitching:
-                # 70% duty cycle during glitch phase for a "stuttering" look
-                btn.visible = random.random() > 0.3
+                if random.random() > 0.4:  # Flicker OFF (show non-glow image)
+                    btn.texture_hovered = btn.texture
+                    # For labels, maybe dim the text?
+                    if btn == self.level_button:
+                        self.level_label.text_color = (255, 255, 255, 100)
+                else:
+                    btn.texture_hovered = btn.original_hover_tex
+                    if btn == self.level_button:
+                        self.level_label.text_color = arcade.color.WHITE
             else:
-                btn.visible = True
-        
-        # 4. Render UI Components Layer
+                # Restore original neon textures
+                if hasattr(btn, 'original_hover_tex'):
+                    btn.texture_hovered = btn.original_hover_tex
+                if btn == self.level_button:
+                    self.level_label.text_color = arcade.color.WHITE
         self.manager.draw()
 
 if __name__ == "__main__":
-    # Initialize main window
-    window = arcade.Window(800, 600, "Minesweeper Menu", resizable=True)
+    window = arcade.Window(1024, 569, "Minesweeper Menu", resizable=True)
     menu_view = Menu()
     window.show_view(menu_view)
     arcade.run()
