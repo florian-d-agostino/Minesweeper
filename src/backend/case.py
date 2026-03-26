@@ -1,5 +1,6 @@
 class Case : 
-    def __init__(self):
+    def __init__(self, position):
+        self.position = position  # [x, y]
         self.value = 0
         self.is_bomb = False
         self.is_revealed = False
@@ -19,3 +20,6 @@ class Case :
                 self.is_marked = 2
             case 2:
                 self.is_marked = 0
+
+    def increase_value(self):
+        self.value += 1
