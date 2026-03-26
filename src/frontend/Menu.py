@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
 import arcade
 import arcade.gui
 import random
@@ -34,7 +38,7 @@ class Menu(arcade.View):
 
     def _init_constants(self):
         """ Difficulty definitions and score load """
-        self.levels = [("FACILE", 1), ("MOYEN", 2), ("DIFFICILE", 3)]
+        self.levels = [("EASY", 1), ("MEDIUM", 2), ("HARD", 3)]
         self.current_level_index = 1
         
         # Load scores from JSON
@@ -52,7 +56,7 @@ class Menu(arcade.View):
                 # Default values if file missing
                 self.score_data = {"0": "00:00", "1": "00:00", "2": "00:00"}
         except Exception as e:
-            print(f"Erreur lors du chargement des scores : {e}")
+            print(f"Error loading scores: {e}")
             self.score_data = {"0": "00:00", "1": "00:00", "2": "00:00"}
 
     def _setup_shader(self):
@@ -129,7 +133,10 @@ class Menu(arcade.View):
             width=250, height=80)
         def on_click_play(event):
             level_name, level_id = self.levels[self.current_level_index]
-            print(f"Lancement du jeu - Niveau : {level_id} ({level_name})")
+            print(f"Starting game - Level: {level_id} ({level_name})")
+            from src.frontend.SetGame import SetGameView
+            game_view = SetGameView(level_id)
+            self.window.show_view(game_view)
         self.play_button.on_click = on_click_play
         self.play_button.original_hover_tex = self.play_button.texture_hovered
         self.v_box.add(self.play_button)
@@ -225,7 +232,7 @@ class Menu(arcade.View):
 
         # Header
         self.score_vbox.add(arcade.gui.UILabel(
-            text="MEILLEUR SCORE", 
+            text="BEST SCORE", 
             font_size=16, font_name="Orbitron", 
             text_color=(255, 255, 0, 230)))
 
