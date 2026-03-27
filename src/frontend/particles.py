@@ -26,7 +26,7 @@ class Particle(arcade.SpriteCircle):
         self.alpha = 255
 
         # Lifespan
-        self.fade_speed = random.uniform(1.5, 3)
+        self.fade_speed = random.uniform(8.0, 12.0)
 
     def update(self, delta_time=0):
         # Movement
@@ -61,8 +61,8 @@ class EnergyWave:
         self.alpha = 200
 
     def update(self, delta_time=0):
-        self.radius += 6
-        self.alpha -= 4
+        self.radius += 10
+        self.alpha -= 10
         if self.alpha < 0:
             self.alpha = 0
 

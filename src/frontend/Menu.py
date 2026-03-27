@@ -7,6 +7,7 @@ import arcade.gui
 import random
 import json
 from pathlib import Path
+from src.frontend.MusicManager import MusicManager
 
 class Menu(arcade.View):
     """
@@ -111,8 +112,7 @@ class Menu(arcade.View):
         arcade.load_font("src/public/assets/Orbitron-Bold.ttf")
         
         # Sound Assets
-        self.music = arcade.load_sound("src/public/assets/Chrome Halo.mp3")
-        self.music_player = self.music.play(loop=True, volume=0.5)
+        MusicManager.get_instance().play_music("src/public/assets/Chrome Halo.mp3", volume=0.5)
 
     def _setup_ui(self):
         """ Build the responsive layout with UIManager """

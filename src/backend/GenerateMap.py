@@ -92,3 +92,9 @@ class GenerateMap:
                 if not case.is_bomb and not case.is_revealed:
                     return False
         return True
+
+    def reveal_all_bombs(self):
+        for row in self.grid:
+            for case in row:
+                if case.is_bomb:
+                    case.is_revealed = True

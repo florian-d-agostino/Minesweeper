@@ -35,6 +35,7 @@ class ShowGrid:
         self.border_color = (0, 255, 255, 180)  # Neon cyan for borders
         
         self.cell_data = []
+        self.text_objects = {}  # Cache for arcade.Text objects
         self._precompute_grid()
         self.bomb_texture = arcade.load_texture("src/public/img/assets/bomb.png")
         
@@ -63,6 +64,30 @@ class ShowGrid:
                     "row": row, 
                     "polygon": polygon
                 })
+                
+                # Pre-create text objects for values 1-8 at this position
+                cx = sum(p[0] for p in polygon) / 4
+                cy = sum(p[1] for p in polygon) / 4
+                
+                # Classic readable colors per value
+                value_colors = {
+                    1: (30, 80, 200),   # deep blue
+                    2: (30, 140, 60),   # forest green
+                    3: (200, 40, 40),   # dark red
+                    4: (90, 20, 140),   # purple
+                    5: (170, 50, 20),   # brown
+                    6: (20, 140, 140),  # teal
+                    7: (30, 30, 30),    # near black
+                    8: (90, 90, 90),    # grey
+                }
+                
+                for val in range(1, 9):
+                    color = value_colors.get(val, (0, 0, 0))
+                    self.text_objects[(col, row, val)] = arcade.Text(
+                        str(val), cx, cy, color,
+                        font_size=10, font_name="Orbitron",
+                        anchor_x="center", anchor_y="center", bold=True
+                    )
 
     def project_point(self, x, y):
         """ Applies a trapezoidal perspective projection so the grid looks like a 3D floor """
@@ -116,7 +141,6 @@ class ShowGrid:
             arcade.draw_polygon_filled(polygon, fill)
             arcade.draw_polygon_outline(polygon, border_color, 2.0)
 
-            # Draw bomb image on top of the red background
             if case and case.is_revealed and case.is_bomb:
                 cx = sum(p[0] for p in polygon) / 4
                 cy = sum(p[1] for p in polygon) / 4
@@ -126,11 +150,7 @@ class ShowGrid:
                     arcade.LBWH(cx - size / 2, cy - size / 2, size, size)
                 )
 
-            elif case and case.is_revealed and not case.is_bomb and case.value > 0:
-                cx = sum(p[0] for p in polygon) / 4
-                cy = sum(p[1] for p in polygon) / 4
-                r, g, b = value_colors.get(case.value, (0, 0, 0))
-                arcade.draw_text(str(case.value), cx, cy, (r, g, b, 255),
-                                 font_size=11, font_name="Orbitron",
-                                 anchor_x="center", anchor_y="center", bold=True)
+            elif case and case.is_revealed and not case.is_bomb and 0 < case.value < 9:
+                # Use pre-created text object
+                self.text_objects[(col, row, case.value)].draw()
 
