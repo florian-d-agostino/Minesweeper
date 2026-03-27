@@ -326,9 +326,3 @@ class Menu(arcade.View):
                 if btn == self.level_button:
                     self.level_label.text_color = arcade.color.WHITE
         self.manager.draw()
-
-if __name__ == "__main__":
-    window = arcade.Window(1024, 569, "Minesweeper", resizable=True)
-    menu_view = Menu()
-    window.show_view(menu_view)
-    arcade.run()
