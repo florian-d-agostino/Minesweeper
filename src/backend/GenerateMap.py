@@ -2,17 +2,19 @@ import random
 from src.backend.Case import Case
 
 class GenerateMap:
-    def __init__(self, difficulty, firstclickpos):
-        self.difficulty = difficulty
-        self.firstclickpos = firstclickpos  # [x, y]
-        self.length = 10 + 5 * difficulty
-        self.bomb_count = (self.length ** 2) // (10 - difficulty)
+    # Grid sizes must match ShowGrid
+    GRID_SIZES = {1: 9, 2: 11, 3: 13}
+    BOMB_COUNTS = {1: 10, 2: 15, 3: 25}
+
+    def __init__(self, level_id, firstclickpos):
+        self.level_id = level_id
+        self.firstclickpos = firstclickpos  # [col, row]
+        self.length = self.GRID_SIZES.get(level_id, 9)
+        self.bomb_count = self.BOMB_COUNTS.get(level_id, 10)
         self.grid = []
         self._generate_empty_grid()
         self._place_bombs()
         self._calculate_values()
-        
-        # Initial cascade from first click
         self.reveal_cells(self.firstclickpos[0], self.firstclickpos[1])
 
     def _generate_empty_grid(self):
@@ -37,14 +39,14 @@ class GenerateMap:
             y = random.randint(0, self.length - 1)
             
             # Avoid placing bomb in the safe zone and avoid duplicates
-            if [x, y] not in safe_zone and not self.grid[y][x].isBomb:
-                self.grid[y][x].transform()
+            if [x, y] not in safe_zone and not self.grid[y][x].is_bomb:
+                self.grid[y][x].transform_case()
                 bombs_placed += 1
 
     def _calculate_values(self):
         for y in range(self.length):
             for x in range(self.length):
-                if self.grid[y][x].isBomb:
+                if self.grid[y][x].is_bomb:
                     self._increment_neighbors(x, y)
 
     def _increment_neighbors(self, x, y):
@@ -55,27 +57,38 @@ class GenerateMap:
                 
                 nx, ny = x + dx, y + dy
                 if 0 <= nx < self.length and 0 <= ny < self.length:
-                    self.grid[ny][nx].increaseValue()
+                    self.grid[ny][nx].increase_value()
 
     def reveal_cells(self, x, y):
         # Base cases: out of bounds or already revealed
         if not (0 <= x < self.length and 0 <= y < self.length):
-            return
+            return False
         
         case = self.grid[y][x]
-        if case.isRevealed:
-            return
+        if case.is_revealed or case.is_marked > 0:
+            return False
         
-        # Reveal the cell
-        case.reveal()
+        case.reveal_case()
         
-        # If the cell is empty (Value == 0 and not a bomb), recurse
-        if case.Value == 0 and not case.isBomb:
+        if case.is_bomb:
+            return True
+        
+        if case.value == 0:
             for dy in range(-1, 2):
                 for dx in range(-1, 2):
                     if dx == 0 and dy == 0:
                         continue
                     self.reveal_cells(x + dx, y + dy)
+        
+        return False
 
     def get_map(self):
         return self.grid
+
+    def check_victory(self):
+        for y in range(self.length):
+            for x in range(self.length):
+                case = self.grid[y][x]
+                if not case.is_bomb and not case.is_revealed:
+                    return False
+        return True

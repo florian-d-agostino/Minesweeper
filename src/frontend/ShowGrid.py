@@ -36,6 +36,7 @@ class ShowGrid:
         
         self.cell_data = []
         self._precompute_grid()
+        self.bomb_texture = arcade.load_texture("src/public/img/assets/bomb.png")
         
     def _precompute_grid(self):
         """ Calculate the perspective polygons for every cell once so it is fast to draw. """
@@ -78,13 +79,58 @@ class ShowGrid:
         
         return perspective_x, perspective_y
         
-    def draw(self):
-        # Draw each pre-calculated polygon
+    def draw(self, grid=None):
+        # Colors for each cell state
+        color_hidden   = (20, 30, 50, 200)
+        color_revealed = (240, 200, 80, 240)
+        color_bomb     = (200, 30, 30, 230)
+        color_flagged  = (200, 130, 0, 230)
+        border_color   = (0, 255, 255, 180)
+
+        # Classic readable colors per value
+        value_colors = {
+            1: (30, 80, 200),   # deep blue
+            2: (30, 140, 60),   # forest green
+            3: (200, 40, 40),   # dark red
+            4: (90, 20, 140),   # purple
+            5: (170, 50, 20),   # brown
+            6: (20, 140, 140),  # teal
+            7: (30, 30, 30),    # near black
+            8: (90, 90, 90),    # grey
+        }
+
         for cell in self.cell_data:
             polygon = cell["polygon"]
-            
-            # Draw the filled interior
-            arcade.draw_polygon_filled(polygon, self.bg_color)
-            
-            # Draw the neon outline (making it look like a wireframe grid)
-            arcade.draw_polygon_outline(polygon, self.border_color, 2.0)
+            col, row = cell["col"], cell["row"]
+
+            # Determine fill color from game state
+            fill = color_hidden
+            case = None
+            if grid is not None:
+                case = grid[row][col]
+                if case.is_marked > 0:
+                    fill = color_flagged
+                elif case.is_revealed:
+                    fill = color_bomb if case.is_bomb else color_revealed
+
+            arcade.draw_polygon_filled(polygon, fill)
+            arcade.draw_polygon_outline(polygon, border_color, 2.0)
+
+            # Draw bomb image on top of the red background
+            if case and case.is_revealed and case.is_bomb:
+                cx = sum(p[0] for p in polygon) / 4
+                cy = sum(p[1] for p in polygon) / 4
+                size = min(self.cell_width, self.cell_height) * 0.8
+                arcade.draw_texture_rect(
+                    self.bomb_texture,
+                    arcade.LBWH(cx - size / 2, cy - size / 2, size, size)
+                )
+
+            elif case and case.is_revealed and not case.is_bomb and case.value > 0:
+                cx = sum(p[0] for p in polygon) / 4
+                cy = sum(p[1] for p in polygon) / 4
+                r, g, b = value_colors.get(case.value, (0, 0, 0))
+                arcade.draw_text(str(case.value), cx, cy, (r, g, b, 255),
+                                 font_size=11, font_name="Orbitron",
+                                 anchor_x="center", anchor_y="center", bold=True)
+
