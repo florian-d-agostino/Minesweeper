@@ -328,7 +328,7 @@ class Menu(arcade.View):
         self.manager.draw()
 
 if __name__ == "__main__":
-    window = arcade.Window(1024, 569, "Minesweeper Menu", resizable=True)
+    window = arcade.Window(1024, 569, "Minesweeper", resizable=True)
     menu_view = Menu()
     window.show_view(menu_view)
     arcade.run()
